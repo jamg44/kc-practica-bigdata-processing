@@ -2,8 +2,7 @@
 
 Por Javier Miguel
 
-
-## Kafka
+## Preparar entorno local de ejecución
 
 https://kafka.apache.org/quickstart
 
@@ -31,7 +30,13 @@ Ver lista de topics
 bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 ```
 
-### Enviar mensajes del fichero
+## Ejecutar el proyecto
+
+Primero debemos tener en ejecución Kafka. Ver [Preparar entorno local de ejecución](#preparar-entorno-local-de-ejecución)
+
+En IntelliJ Idea ejecutar src/main/scala/espias/EspiarMensajes.scala
+
+Tras esto podemos enviar mensajes del fichero:
 
 ```shell script
 bin/kafka-console-producer.sh --broker-list localhost:9092 --topic Celebrum > MensajesCapturados.csv

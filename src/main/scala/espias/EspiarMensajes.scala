@@ -5,7 +5,6 @@ import java.sql.Timestamp
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.window
-import org.apache.spark.sql.types.StructType
 
 import scala.io.Source
 
@@ -31,33 +30,6 @@ object EspiarMensajes {
     val palabrasListaNegra = Source.fromFile("data/ListaNegra.txt").getLines.toList
     println("Lista negra cargada.")
     //palabrasListaNegra.foreach(println)
-
-
-    /**
-     * Cargar usuarios
-     */
-    // crear una estructura en cuanto a tipos (esquema)
-    /*val esquemaRegistro = new StructType()
-      .add("sample", "long")
-      .add("cThick", "integer")
-      .add("uCSize", "integer")
-      .add("uCShape", "integer")
-      .add("mAdhes", "integer")
-
-    // crear un dataframe leyendo un CSV pasándole el esquema creado
-    val dataSamplesDF = spark.read.format("csv")
-      .option("header", false)
-      .schema(esquemaRegistro)
-      .load("data/breast-cancer-wisconsin.txt")
-
-    // para ver lo que he cargado
-    //dataSamplesDF.show()
-    dataSamplesDF.createOrReplaceTempView("cancerTable")
-
-    val dataSamplesSQL = spark.sql("SELECT sample, uCSize from cancerTable")
-
-    dataSamplesSQL.show()*/
-
 
     /**
      * Procesar mensajes
@@ -86,6 +58,8 @@ object EspiarMensajes {
     val palabras = data.flatMap(partePalabrasYTimestamp)
       .toDF("palabra", "timestamp")
 
+
+
     // ventana de tiempo
     // slide: 5 seconds
     println("Agrupador de palabras por frecuencia...")
@@ -95,28 +69,67 @@ object EspiarMensajes {
         $"palabra"
       ).count()
       //.orderBy("window")
-
-
-    val conteoPalabrasMasUsadas = conteoPalabrasSlide
       .orderBy($"count".desc)
-
-    /*val df = conteoPalabrasMasUsadas.toDF()
-    df.createOrReplaceTempView("masusadas")
-    val masUsadas = spark.sql("select * from masusadas")
-    masUsadas.show()*/
 
     //val prohibidas = conteoPalabrasMasUsadas.limit(10)
 
     println("Preparando escritor a consola...")
-    val query = conteoPalabrasMasUsadas.writeStream
+    val query = conteoPalabrasSlide.writeStream
       .outputMode("complete") // uso 'complete' porque no me dejó usar 'update' con este modo
       .format("console")
       // .option("checkpointLocation", "checkpoint") // quito el checkpoint porque sino no puedo vivir borrando la carpeta todo el tiempo
       .option("truncate", false) // para que se vean los campos completos
       .start()
+
     println("Listo!")
 
     query.awaitTermination()
+
+    /*
+
+    ** RICARDO JAUME
+
+    Haciendo bin/kafka-console-producer.sh --broker-list localhost:9092 --topic Celebram < MensajesCapturados.csv
+    he llegado a obtener esto:
+
+
+-------------------------------------------
+Batch: 2
+-------------------------------------------
++------------------------------------------+-------------+-----+
+|window                                    |palabra      |count|
++------------------------------------------+-------------+-----+
+|[2019-10-26 20:42:20, 2019-10-26 20:42:30]|e-business   |38   |
+|[2019-10-26 20:42:25, 2019-10-26 20:42:35]|e-business   |38   |
+|[2019-10-26 20:42:20, 2019-10-26 20:42:30]|relationships|33   |
+|[2019-10-26 20:42:25, 2019-10-26 20:42:35]|relationships|33   |
+|[2019-10-26 20:42:25, 2019-10-26 20:42:35]|users        |31   |
+|[2019-10-26 20:42:20, 2019-10-26 20:42:30]|users        |31   |
+|[2019-10-26 20:42:20, 2019-10-26 20:42:30]|e-services   |30   |
+|[2019-10-26 20:42:25, 2019-10-26 20:42:35]|e-services   |30   |
+|[2019-10-26 20:42:25, 2019-10-26 20:42:35]|supply-chains|30   |
+|[2019-10-26 20:42:20, 2019-10-26 20:42:30]|supply-chains|30   |
+|[2019-10-26 20:42:25, 2019-10-26 20:42:35]|real-time    |29   |
+|[2019-10-26 20:42:20, 2019-10-26 20:42:30]|real-time    |29   |
+|[2019-10-26 20:42:25, 2019-10-26 20:42:35]|action-items |28   |
+|[2019-10-26 20:42:20, 2019-10-26 20:42:30]|action-items |28   |
+|[2019-10-26 20:42:20, 2019-10-26 20:42:30]|web-readiness|27   |
+|[2019-10-26 20:42:25, 2019-10-26 20:42:35]|web-readiness|27   |
+|[2019-10-26 20:42:20, 2019-10-26 20:42:30]|initiatives  |27   |
+|[2019-10-26 20:42:25, 2019-10-26 20:42:35]|initiatives  |27   |
+|[2019-10-26 20:42:25, 2019-10-26 20:42:35]|content      |26   |
+|[2019-10-26 20:42:20, 2019-10-26 20:42:30]|e-tailers    |26   |
++------------------------------------------+-------------+-----+
+only showing top 20 rows
+
+Llevo días tratando de hacer un limit de los resultados sin éxito, todas las formas que veo en
+stackoverflow terminan sin compilar porque dice que quiere hacer limit con streaming.
+
+Tampoco he conseguido escribir los resultados a disco.
+Lo más cerca que he estado es con esto: https://stackoverflow.com/questions/49026429/how-to-use-update-output-mode-with-fileformat-format
+y lo que queda en el disco no se como procesarlo.
+
+*/
 
   }
 }
