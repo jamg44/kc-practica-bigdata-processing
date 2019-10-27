@@ -87,12 +87,20 @@ object EspiarMensajes {
 
     /*
 
-    ** RICARDO JAUME
+    Hola Ricardo,
 
     Haciendo bin/kafka-console-producer.sh --broker-list localhost:9092 --topic Celebram < MensajesCapturados.csv
+
     he llegado a obtener esto:
 
-
+Cargando lista negra...
+Lista negra cargada.
+Abriendo stream de kafka (Celebram)...
+Kafka Stream 'Celebram' abierto.
+Configurando cargador de palabras a DataFrame...
+Agrupador de palabras por frecuencia...
+Preparando escritor a consola...
+Listo!
 -------------------------------------------
 Batch: 2
 -------------------------------------------
@@ -122,8 +130,8 @@ Batch: 2
 +------------------------------------------+-------------+-----+
 only showing top 20 rows
 
-Llevo días tratando de hacer un limit de los resultados sin éxito, todas las formas que veo en
-stackoverflow terminan sin compilar porque dice que quiere hacer limit con streaming.
+Llevo dias tratando de hacer un limit de los resultados sin éxito, todas las formas que veo en
+stackoverflow terminan sin compilar porque dice que no se puede hacer limit con streaming.
 
 Tampoco he conseguido escribir los resultados a disco.
 Lo más cerca que he estado es con esto: https://stackoverflow.com/questions/49026429/how-to-use-update-output-mode-with-fileformat-format
